@@ -39,7 +39,7 @@ builds and install the `wiztoolkit` OCaml library (under root module named `Wizt
 The bindings can also be installed via `opam`, by running
 
 ```
-$> opam install wiztoolkit_ocaml
+$> opam pin git+https://github.com/SRI-CSL/wiztoolkit-ocaml-bindings.git#main
 ```
 
 ## Examples
