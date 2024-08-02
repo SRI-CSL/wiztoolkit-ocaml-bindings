@@ -5,7 +5,7 @@
 (generate_opam_files true)
 
 (source
- (github SRI-CSL/wiztoolkit_ocaml_bindings))
+ (github SRI-CSL/wiztoolkit-ocaml-bindings))
 
 (authors "Vitor Pereira and Stéphane Graham-Lengrand")
 
