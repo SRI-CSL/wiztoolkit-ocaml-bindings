@@ -1,0 +1,41 @@
+GCC=gcc
+GPP=g++
+
+LIBTOOL=libtool
+AR=ar
+C_FLAG=-c
+O_FLAG=-o
+C11_FLAG=-std=c++11
+
+RM=rm
+RF_FLAG=-rf
+
+all: bindings main linking
+
+bindings:
+	$(GPP) $(C_FLAG) $(O_FLAG) bindings.o \
+	-I${WTK_DIR}/src/main/cpp \
+	-I${WTK_DIR}/target/generated \
+	-I${WTK_DIR}/src/deps/logging \
+	bindings.cpp $(C11_FLAG)
+
+main:
+	$(GCC) $(C_FLAG) main.c $(O_FLAG) main.o
+
+linking:
+	$(GPP) main.o bindings.o $(O_FLAG) main.exe \
+	${WTK_DIR}/target/build/src/main/cpp/libwiztoolkit.a \
+	${WTK_DIR}/target/build/src/deps/logging/libstealth_logging.a \
+	-lgmpxx -lgmp $(C11_FLAG)
+
+clean:
+	$(RM) $(RF_FLAG) bindings.o main.o main.exe bindings.a bindings_single.a
+
+lib: bindings
+	$(AR) rc bindings.a bindings.o
+
+libs: lib
+	$(LIBTOOL) -static $(O_FLAG) libbindings.a  \
+	bindings.a \
+	${WTK_DIR}/target/build/src/main/cpp/libwiztoolkit.a \
+	${WTK_DIR}/target/build/src/deps/logging/libstealth_logging.a \

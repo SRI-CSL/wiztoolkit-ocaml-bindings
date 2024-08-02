@@ -1,0 +1,39 @@
+GCC=gcc
+GPP=g++
+
+LIBTOOL=libtool
+AR=ar
+C_FLAG=-c
+O_FLAG=-o
+C11_FLAG=-std=c++11
+
+MKDIR_P=mkdir -p
+RANLIB=ranlib
+RM=rm
+CP=cp
+RF_FLAG=-rf
+
+all: libs
+
+bindings:
+	$(GPP) $(C_FLAG) $(O_FLAG) bindings.o \
+	-I${WTK_DIR}/include \
+	-I${WTK_DIR}/lib \
+	bindings.cpp -lgmpxx -lgmp $(C11_FLAG)
+
+clean:
+	$(RM) $(RF_FLAG) bindings.o main.o main.exe bindings.a bindings_single.a tmpar libwiztoolkit.a libstealth_logging.a libbindings.a
+
+libwiztoolkit.a:
+	$(CP) ${WTK_DIR}/lib/libwiztoolkit.a .
+
+libstealth_logging.a:
+	$(CP) ${WTK_DIR}/lib/libstealth_logging.a .
+
+libs: bindings libwiztoolkit.a libstealth_logging.a
+	$(AR) rc libbindings.a bindings.o
+	$(MKDIR_P) tmpar
+	(cd tmpar; $(AR) x ../libwiztoolkit.a; $(AR) q "../libbindings.a" *.o; rm *.o;)
+	(cd tmpar; $(AR) x ../libstealth_logging.a; $(AR) q "../libbindings.a" *.o; rm *.o;)
+	rm -rf tmpar
+	$(RANLIB) libbindings.a

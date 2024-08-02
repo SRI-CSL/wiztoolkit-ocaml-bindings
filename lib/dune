@@ -1,0 +1,81 @@
+; Foreign archive libbindings.a, see
+; https://dune.readthedocs.io/en/stable/foreign-code.html?highlight=linking#foreign-build-sandboxing
+
+(data_only_dirs wiztoolkit_as_C_lib)
+
+; Building Wiztoolkit
+
+(rule
+ ; (deps (source_tree wiztoolkit))
+ (action
+  (progn
+   ; (chdir wiztoolkit (progn (run make clean) (run make)))
+   (write-file wiztoolkit_OK "Wiztoolkit compiled OK")))
+)
+
+; Foreign archive libbindings.a
+
+(rule
+ (deps wiztoolkit_OK (source_tree wiztoolkit_as_C_lib))
+ (targets libbindings.a)
+ (action
+ (no-infer
+  (setenv WTK_DIR /usr/local
+  (progn
+   (chdir wiztoolkit_as_C_lib
+          (progn
+                (copy Makefile_%{system} Makefile)
+                (run make libs)
+                ))
+   (copy wiztoolkit_as_C_lib/libbindings.a libbindings.a)))))
+)
+
+; Building executable to build the link flags
+(executable
+ (name set_flags)
+ (libraries ctypes ctypes.foreign containers)
+ (modules Set_flags)
+)
+
+; Building the link flags
+(rule
+ (deps set_flags.exe)
+ (action
+  (with-stdout-to link_flags
+   (run ./set_flags.exe %{system})))
+)
+
+; Installing the link flags for application using this library
+; The executable stanza in its dune file should contain
+;  (link_flags (:include /%{lib:wiztoolkit:link_flags}))
+
+(install
+ (files link_flags)
+ (section lib)
+ (package wiztoolkit))
+ 
+(library
+ (name wiztoolkit)
+ (public_name wiztoolkit)
+ (libraries ctypes ctypes-zarith ctypes.foreign containers)
+
+ ; wiztoolkit's build doesn't produce shared libraries, we'll have to statically link
+ (no_dynlink)
+
+ ; Attempt at compiling the C++ code from dune
+ ; too basic for us -> we use the Foreign archive approach instead
+ ; (foreign_stubs (language cxx) (names ../../bindings.cpp))
+
+ ; Foreign archive libbindings.a
+ (foreign_archives bindings)
+ (modules Types Bindings)
+ (synopsis "Wiztoolkit bindings")
+ 
+
+ ; Forcing C++ linker instead of C linker + linking bindings statically
+ ;(link_flags (:include link_flags))
+
+ ; (promote (until-clean) (into ".."))
+)
+
+(env (dev (flags (:standard -warn-error -A))))
